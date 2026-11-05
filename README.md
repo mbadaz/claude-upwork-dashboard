@@ -25,14 +25,14 @@ bar shows each fetch phase while loading.
 At the prompt of a terminal Claude Code session:
 
 ```
-/plugin install upwork-dashboard --marketplace mbadaz/claude-upwork-dashboard
+/plugin install upwork-revenue-dashboard --marketplace mbadaz/claude-upwork-dashboard
 ```
 
 Answer `y` to add the marketplace, then pick a scope (the user scope is first). From a
 shell you can instead run:
 
 ```
-claude plugin install upwork-dashboard --marketplace mbadaz/claude-upwork-dashboard
+claude plugin install upwork-revenue-dashboard --marketplace mbadaz/claude-upwork-dashboard
 ```
 
 In the Claude desktop app, where `/plugin` is not available: click **+** next to the

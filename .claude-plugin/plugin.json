@@ -1,7 +1,8 @@
 {
-  "name": "upwork-dashboard",
+  "name": "upwork-revenue-dashboard",
   "version": "0.1.0",
   "description": "A live pane showing your Upwork revenue, spend, balance and connects.",
+  "displayName": "Upwork revenue dashboard",
   "author": { "name": "mbadaz" },
   "license": "MIT",
   "types": "./types/index.d.ts"

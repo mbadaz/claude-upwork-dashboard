@@ -250,6 +250,8 @@ export function buildSnapshot(input: {
   summary: any
   bal: any
   connectsBalance: number
+  connectsFree: number
+  connectsPaid: number
   connectsSpent: number
   connectsByCategory: ConnectsCategory[]
   ledger: Ledger
@@ -277,6 +279,8 @@ export function buildSnapshot(input: {
     pendingBalance: num(input.bal?.pending_balance),
     pendingCredit: num(input.bal?.pending_credit),
     connectsBalance: input.connectsBalance,
+    connectsFree: input.connectsFree,
+    connectsPaid: input.connectsPaid,
     connectsSpent: input.connectsSpent,
     connectsByCategory: input.connectsByCategory,
     connectsPurchasedUsd: input.ledger.connectsPurchasedUsd,

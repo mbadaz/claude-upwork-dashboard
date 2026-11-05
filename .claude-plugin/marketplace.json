@@ -1,5 +1,5 @@
 {
   "name": "claude-upwork-dashboard",
   "owner": { "name": "mbadaz" },
-  "plugins": [{ "name": "upwork-dashboard", "source": "./" }]
+  "plugins": [{ "name": "upwork-revenue-dashboard", "source": "./" }]
 }

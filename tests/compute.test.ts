@@ -34,6 +34,8 @@ const baseSnap: DashboardSnapshot = {
   pendingBalance: 200,
   pendingCredit: 240,
   connectsBalance: 90,
+  connectsFree: 50,
+  connectsPaid: 40,
   connectsSpent: 120,
   connectsByCategory: [],
   connectsPurchasedUsd: 30,
@@ -211,6 +213,8 @@ test('buildSnapshot assembles totals, abs fees and client ranking', () => {
     summary,
     bal,
     connectsBalance: 90,
+    connectsFree: 50,
+    connectsPaid: 40,
     connectsSpent: 120,
     connectsByCategory: [{ category: 'Profile boost', connects: 80 }],
     ledger: { withdrawalFees: 20, withdrawn: 600, connectsPurchasedUsd: 30, membershipUsd: 40 },
@@ -223,6 +227,8 @@ test('buildSnapshot assembles totals, abs fees and client ranking', () => {
   expect(snap.availableNow).toBe(25)
   expect(snap.pendingBalance).toBe(200)
   expect(snap.connectsBalance).toBe(90)
+  expect(snap.connectsFree).toBe(50)
+  expect(snap.connectsPaid).toBe(40)
   expect(snap.connectsPurchasedUsd).toBe(30)
   expect(snap.membershipUsd).toBe(40)
   expect(snap.periodFrom).toBe('2026-01-01')
@@ -327,6 +333,8 @@ test('buildSnapshot falls back when responses are empty', () => {
     summary: {},
     bal: {},
     connectsBalance: 0,
+    connectsFree: 0,
+    connectsPaid: 0,
     connectsSpent: 0,
     connectsByCategory: [],
     ledger: { withdrawalFees: 0, withdrawn: 0, connectsPurchasedUsd: 0, membershipUsd: 0 },

@@ -36,29 +36,29 @@ const BAR_TRACK = '░'
 // Cache one snapshot per period (days), so switching back to an already-loaded
 // period is instant and only an unseen period (or ↻ Refresh) triggers a fetch.
 const snapshotsAtom = atom(
-  { plugin: 'upwork-dashboard', key: 'snapshots' } as const,
+  { plugin: 'upwork-revenue-dashboard', key: 'snapshots' } as const,
   {} as Record<number, DashboardSnapshot>,
-  { shape: 'snapshots-2' },
+  { shape: 'snapshots-3' },
 )
 const statusAtom = atom(
-  { plugin: 'upwork-dashboard', key: 'status' } as const,
+  { plugin: 'upwork-revenue-dashboard', key: 'status' } as const,
   'idle' as DashStatus,
 )
 const errorAtom = atom(
-  { plugin: 'upwork-dashboard', key: 'error' } as const,
+  { plugin: 'upwork-revenue-dashboard', key: 'error' } as const,
   null as string | null,
 )
 const periodAtom = atom(
-  { plugin: 'upwork-dashboard', key: 'periodDays' } as const,
+  { plugin: 'upwork-revenue-dashboard', key: 'periodDays' } as const,
   DEFAULT_DAYS,
 )
 // Loading progress (phase + 0..total) and an animation frame for the spinner.
 const progressAtom = atom(
-  { plugin: 'upwork-dashboard', key: 'progress' } as const,
+  { plugin: 'upwork-revenue-dashboard', key: 'progress' } as const,
   null as Progress | null,
 )
 const frameAtom = atom(
-  { plugin: 'upwork-dashboard', key: 'frame' } as const,
+  { plugin: 'upwork-revenue-dashboard', key: 'frame' } as const,
   0,
 )
 
@@ -229,6 +229,8 @@ async function refresh($: EngineInterface, days: number): Promise<void> {
     // can't sink the dashboard. aggregateConnects() does the netting.
     const fromMs = Date.parse(`${from}T00:00:00Z`)
     let connectsBalance = 0
+    let connectsFree = 0
+    let connectsPaid = 0
     const connTransactions: any[] = []
     try {
       let cursor: string | undefined
@@ -240,7 +242,11 @@ async function refresh($: EngineInterface, days: number): Promise<void> {
           org_uid: org,
           params: cursor ? { limit: 25, cursor } : { limit: 25 },
         })
-        if (page === 0) connectsBalance = num(conn?.balance?.connectsBalance)
+        if (page === 0) {
+          connectsBalance = num(conn?.balance?.connectsBalance)
+          connectsFree = num(conn?.balance?.connectsBalanceFree)
+          connectsPaid = num(conn?.balance?.connectsBalancePaid)
+        }
         const list = conn?.usage_history?.transactions ?? []
         let reachedOld = false
         for (const t of list) {
@@ -280,6 +286,8 @@ async function refresh($: EngineInterface, days: number): Promise<void> {
       summary,
       bal,
       connectsBalance,
+      connectsFree,
+      connectsPaid,
       connectsSpent,
       connectsByCategory,
       ledger,
@@ -530,7 +538,10 @@ export const register: Register = on => {
           </Text>
           {metric('Available now', money(snap.availableNow), 'success', true)}
           {metric('Pending', money(snap.pendingBalance))}
-          {metric('Connects left', `${snap.connectsBalance}`)}
+          {metric(
+            'Connects left',
+            `${snap.connectsBalance}  (${snap.connectsFree} free · ${snap.connectsPaid} paid)`,
+          )}
         </Box>
 
         {clients.length > 0 && (

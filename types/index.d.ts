@@ -24,6 +24,8 @@ export interface DashboardSnapshot {
   pendingBalance: number
   pendingCredit: number
   connectsBalance: number
+  connectsFree: number
+  connectsPaid: number
   connectsSpent: number
   connectsByCategory: ConnectsCategory[]
   connectsPurchasedUsd: number
@@ -43,7 +45,7 @@ export interface Progress {
 
 declare module 'claude-code' {
   interface PluginState {
-    'upwork-dashboard': {
+    'upwork-revenue-dashboard': {
       // Per-period cache, keyed by period length in days (30/90/365).
       // Change the shape tag in register.tsx if these fields change.
       snapshots: Shaped<Record<number, DashboardSnapshot>>
