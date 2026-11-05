@@ -8,8 +8,9 @@ refreshes on its own every 5 minutes.
 ## What it shows
 
 - **Revenue** — net earned, gross billed, and effective fee rate.
-- **Spend** — Upwork service fees, withdrawal fees, and the actual USD you spent buying
-  Connects (from the transaction ledger), plus a total.
+- **Spend** — Upwork service fees, withdrawal fees, Connects bought, and
+  membership/subscription charges (actual USD from the transaction ledger), shown as a
+  pie chart of the composition with a total.
 - **Connects used** — count for the period, broken down by purpose (proposals, profile
   boost, availability/invitation badge, membership…).
 - **Balance** — available now, pending, and Connects remaining.

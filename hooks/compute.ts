@@ -13,6 +13,7 @@ export type Ledger = {
   withdrawalFees: number
   withdrawn: number
   connectsPurchasedUsd: number
+  membershipUsd: number
 }
 
 // Parse a money-ish value: a number, a numeric string, or an Upwork amount
@@ -68,14 +69,17 @@ export function categorize(reason: any): string {
 }
 
 // Classify ledger rows into real cash costs: Upwork withdrawal fees, amounts
-// withdrawn, and actual USD spent buying Connects ("Fees for additional
-// Connects (100)." = $15.00). Service fees are excluded (they come from the
-// summary totals instead).
+// withdrawn, actual USD spent buying Connects ("Fees for additional Connects
+// (100)." = $15.00), and membership/subscription charges ("Subscription Renewal
+// Charges" = $19.99, Freelancer Plus). Both connect purchases and subscriptions
+// carry the `Membership Fee` subtype, so the "Connects" description is checked
+// first. Service fees are excluded (they come from the summary totals instead).
 export function aggregateLedger(rows: any[]): Ledger {
   const out: Ledger = {
     withdrawalFees: 0,
     withdrawn: 0,
     connectsPurchasedUsd: 0,
+    membershipUsd: 0,
   }
   for (const r of rows ?? []) {
     const amt = num(r?.transactionAmount)
@@ -86,6 +90,8 @@ export function aggregateLedger(rows: any[]): Ledger {
       out.withdrawn += Math.abs(amt)
     } else if (amt > 0 && /connect/i.test(desc)) {
       out.connectsPurchasedUsd += amt
+    } else if (r?.accountingSubtype === 'Membership Fee' && amt > 0) {
+      out.membershipUsd += amt
     }
   }
   return out
@@ -160,7 +166,8 @@ export function spendSlices(snap: DashboardSnapshot): SpendSlice[] {
     { label: 'Upwork fees', value: snap.fees, color: '#2a78d6', colorDark: '#3987e5' },
     { label: 'Withdrawal fees', value: snap.withdrawalFees, color: '#eb6834', colorDark: '#d95926' },
     { label: 'Connects bought', value: snap.connectsPurchasedUsd, color: '#1baf7a', colorDark: '#199e70' },
-    { label: 'Tax withheld', value: snap.tax, color: '#eda100', colorDark: '#c98500' },
+    { label: 'Membership', value: snap.membershipUsd, color: '#eda100', colorDark: '#c98500' },
+    { label: 'Tax withheld', value: snap.tax, color: '#e87ba4', colorDark: '#d55181' },
   ]
   return defs.filter(s => s.value > 0)
 }
@@ -273,6 +280,7 @@ export function buildSnapshot(input: {
     connectsSpent: input.connectsSpent,
     connectsByCategory: input.connectsByCategory,
     connectsPurchasedUsd: input.ledger.connectsPurchasedUsd,
+    membershipUsd: input.ledger.membershipUsd,
     withdrawalFees: input.ledger.withdrawalFees,
     withdrawn: input.ledger.withdrawn,
     fetchedAt: input.now,

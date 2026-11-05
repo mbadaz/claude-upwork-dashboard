@@ -27,6 +27,7 @@ export interface DashboardSnapshot {
   connectsSpent: number
   connectsByCategory: ConnectsCategory[]
   connectsPurchasedUsd: number
+  membershipUsd: number
   withdrawalFees: number
   withdrawn: number
   fetchedAt: number

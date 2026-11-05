@@ -37,6 +37,7 @@ const baseSnap: DashboardSnapshot = {
   connectsSpent: 120,
   connectsByCategory: [],
   connectsPurchasedUsd: 30,
+  membershipUsd: 0,
   withdrawalFees: 20,
   withdrawn: 600,
   fetchedAt: 0,
@@ -106,10 +107,11 @@ test('aggregateLedger sums fees, withdrawals and connect purchases only', () => 
     { accountingSubtype: 'Withdrawal', description: 'Withdrawal', transactionAmount: { rawValue: '100.00' } },
     { accountingSubtype: 'Service Fee', description: 'Service Fee\nContract ID: 1', transactionAmount: { rawValue: '-5.25' } }, // excluded
     { accountingSubtype: 'Hourly', description: 'Client - 15:00 hrs', transactionAmount: { rawValue: '375.00' } }, // excluded
-    { accountingSubtype: 'Membership Fee', description: 'Freelancer Plus membership', transactionAmount: { rawValue: '14.99' } }, // no "connect" -> excluded
+    { accountingSubtype: 'Membership Fee', description: 'Subscription Renewal Charges', transactionAmount: { rawValue: '19.99' } }, // Freelancer Plus
   ]
   const led = aggregateLedger(rows)
-  expect(led.connectsPurchasedUsd).toBe(37.5)
+  expect(led.connectsPurchasedUsd).toBe(37.5) // the two "Connects" rows
+  expect(led.membershipUsd).toBe(19.99) // subscription, NOT a connect purchase
   expect(led.withdrawalFees).toBe(1)
   expect(led.withdrawn).toBe(100)
 })
@@ -119,8 +121,9 @@ test('aggregateLedger handles empty / missing input', () => {
     withdrawalFees: 0,
     withdrawn: 0,
     connectsPurchasedUsd: 0,
+    membershipUsd: 0,
   })
-  expect(aggregateLedger(undefined as any).connectsPurchasedUsd).toBe(0)
+  expect(aggregateLedger(undefined as any).membershipUsd).toBe(0)
 })
 
 // --- aggregateConnects: net refunds, drop zeros, sort desc ------------------
@@ -210,7 +213,7 @@ test('buildSnapshot assembles totals, abs fees and client ranking', () => {
     connectsBalance: 90,
     connectsSpent: 120,
     connectsByCategory: [{ category: 'Profile boost', connects: 80 }],
-    ledger: { withdrawalFees: 20, withdrawn: 600, connectsPurchasedUsd: 30 },
+    ledger: { withdrawalFees: 20, withdrawn: 600, connectsPurchasedUsd: 30, membershipUsd: 40 },
   })
 
   expect(snap.billed).toBe(12000)
@@ -221,6 +224,7 @@ test('buildSnapshot assembles totals, abs fees and client ranking', () => {
   expect(snap.pendingBalance).toBe(200)
   expect(snap.connectsBalance).toBe(90)
   expect(snap.connectsPurchasedUsd).toBe(30)
+  expect(snap.membershipUsd).toBe(40)
   expect(snap.periodFrom).toBe('2026-01-01')
   // clients sorted by earned desc
   expect(snap.byClient.map(c => c.client)).toEqual([
@@ -233,7 +237,7 @@ test('buildSnapshot assembles totals, abs fees and client ranking', () => {
 
 // --- spend pie ---------------------------------------------------------------
 test('spendSlices keeps positive slices in fixed colour order', () => {
-  const slices = spendSlices(baseSnap) // tax is 0 -> dropped
+  const slices = spendSlices(baseSnap) // membership & tax are 0 -> dropped
   expect(slices.map(s => s.label)).toEqual([
     'Upwork fees',
     'Withdrawal fees',
@@ -257,6 +261,19 @@ test('spendSlices includes tax when non-zero and drops all-zero', () => {
       tax: 0,
     }),
   ).toEqual([])
+})
+
+test('spendSlices adds Membership (yellow) and Tax (magenta) when present', () => {
+  const slices = spendSlices({ ...baseSnap, membershipUsd: 20, tax: 5 })
+  expect(slices.map(s => s.label)).toEqual([
+    'Upwork fees',
+    'Withdrawal fees',
+    'Connects bought',
+    'Membership',
+    'Tax withheld',
+  ])
+  expect(slices.find(s => s.label === 'Membership')?.color).toBe('#eda100')
+  expect(slices.find(s => s.label === 'Tax withheld')?.color).toBe('#e87ba4')
 })
 
 test('pct rounds and guards zero total', () => {
@@ -312,7 +329,7 @@ test('buildSnapshot falls back when responses are empty', () => {
     connectsBalance: 0,
     connectsSpent: 0,
     connectsByCategory: [],
-    ledger: { withdrawalFees: 0, withdrawn: 0, connectsPurchasedUsd: 0 },
+    ledger: { withdrawalFees: 0, withdrawn: 0, connectsPurchasedUsd: 0, membershipUsd: 0 },
   })
   expect(snap.billed).toBe(0)
   expect(snap.currency).toBe('USD')

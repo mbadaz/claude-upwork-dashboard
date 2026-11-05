@@ -38,7 +38,7 @@ const BAR_TRACK = '░'
 const snapshotsAtom = atom(
   { plugin: 'upwork-dashboard', key: 'snapshots' } as const,
   {} as Record<number, DashboardSnapshot>,
-  { shape: 'snapshots-1' },
+  { shape: 'snapshots-2' },
 )
 const statusAtom = atom(
   { plugin: 'upwork-dashboard', key: 'status' } as const,
@@ -158,7 +158,12 @@ async function fetchLedger(
   fromMs: number,
   toMs: number,
 ): Promise<Ledger> {
-  const out: Ledger = { withdrawalFees: 0, withdrawn: 0, connectsPurchasedUsd: 0 }
+  const out: Ledger = {
+    withdrawalFees: 0,
+    withdrawn: 0,
+    connectsPurchasedUsd: 0,
+    membershipUsd: 0,
+  }
   for (const { from, to } of ledgerChunks(fromMs, toMs)) {
     try {
       const tx = await callUpwork($, 'get_freelancer_financials', {
@@ -173,6 +178,7 @@ async function fetchLedger(
       out.withdrawalFees += part.withdrawalFees
       out.withdrawn += part.withdrawn
       out.connectsPurchasedUsd += part.connectsPurchasedUsd
+      out.membershipUsd += part.membershipUsd
     } catch {
       /* skip this chunk; keep the totals we have */
     }
@@ -498,9 +504,10 @@ export const register: Register = on => {
             SPEND
           </Text>
           {metric('Upwork fees', money(snap.fees), 'warning')}
-          {snap.tax > 0 && metric('Tax withheld', money(snap.tax), 'warning')}
           {metric('Withdrawal fees', money(snap.withdrawalFees), 'warning')}
           {metric('Connects bought', money(snap.connectsPurchasedUsd), 'warning')}
+          {metric('Membership', money(snap.membershipUsd), 'warning')}
+          {snap.tax > 0 && metric('Tax withheld', money(snap.tax), 'warning')}
           {metric('Connects used', `${snap.connectsSpent}`, 'warning')}
           {(snap.connectsByCategory ?? []).map((c, i) => (
             <Text key={`cat${i}`} dimColor>
@@ -510,9 +517,7 @@ export const register: Register = on => {
           ))}
           {metric(
             'Total spend',
-            money(
-              snap.fees + snap.withdrawalFees + snap.connectsPurchasedUsd,
-            ),
+            money(sliceTotal(spendSlices(snap))),
             'warning',
             true,
           )}
