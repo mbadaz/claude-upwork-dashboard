@@ -183,6 +183,7 @@ async function fetchLedger(
 // --- the one fetch that fills the dashboard --------------------------------
 let refreshing = false
 let animTimer: { cancel: () => void } | null = null
+let autoTimer: { cancel: () => void } | null = null
 const PROG_TOTAL = 4
 
 async function refresh($: EngineInterface, days: number): Promise<void> {
@@ -293,16 +294,11 @@ async function refresh($: EngineInterface, days: number): Promise<void> {
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
+    // Only register the command — nothing opens or fetches until the user
+    // explicitly runs /upwork.
     await $.command.register({
       name: 'upwork',
       description: 'Open the Upwork revenue & spend dashboard',
-    })
-    void $.ui.open({ id: PANE, title: 'Upwork' })
-
-    const days = (await read($, periodAtom)) || DEFAULT_DAYS
-    void refresh($, days)
-    $.clock.every(REFRESH_MS, async () => {
-      void refresh($, (await read($, periodAtom)) || DEFAULT_DAYS)
     })
 
     return next(e)
@@ -311,6 +307,13 @@ export const register: Register = on => {
   on('command.run', { command: 'upwork' }, async $ => {
     await $.ui.open({ id: PANE, title: 'Upwork', focus: true })
     void refresh($, (await read($, periodAtom)) || DEFAULT_DAYS)
+
+    // Start the 5-minute auto-refresh once, now that the user has opened it.
+    if (!autoTimer) {
+      autoTimer = $.clock.every(REFRESH_MS, async () => {
+        void refresh($, (await read($, periodAtom)) || DEFAULT_DAYS)
+      })
+    }
 
     return { text: 'Upwork dashboard opened.' }
   })
